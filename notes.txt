@@ -1,0 +1,140 @@
+
+git operators run in k8 cluster to monitor changes and pulls changes from git
+git repo-desired state
+k8 cluster-actual state
+git revert to do undo changes made 
+
+gitops principles
+================
+1)declarative yaml apprach(discourge imperative comands)
+2)git for version controller
+3) git operator pull changes from git
+4)reconcillation >>observe(git),diff(compares resources) and act
+
+Devops>>changes will be pushed to cluster
+Gitops>changes will be pulled(git operator) to cluster
+
+Argo Apps and project
+================
+https://argo-cd.readthedocs.io/en/stable/user-guide/commands/argocd_app_create/
+
+kubectl create namespace argocd
+
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.4.11/manifests/install.yaml
+
+kubectl -n argocd get cm argocd-cm or
+ k get cm -n argocd 
+ kubectl -n argocd get svc argocd-server
+
+ k edit -n argocd svc argocd-server Or 
+ kubectl edit svc argocd-server -n argocd
+
+ kubectl -n argocd get secrets argocd-initial-admin-secret -o json | jq .data.password -r | tr -d '\n'  | base64 -d
+
+  kubectl -n argocd get secrets repo-1376608715 -o json | jq .data.url -r | base64 -d
+
+  curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.4.11/argocd-linux-amd64
+chmod +x /usr/local/bin/argocd
+
+by default 3mins to reflect changes>>do hard refresh
+
+Argo cli
+===============
+curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+
+chmod +x argocd
+
+sudo mv argocd /usr/local/bin/
+
+argocd version
+
+kubectl get svc -n argocd
+
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+argocd app --help
+
+https://github.com/NarendraJatti/kubernetes
+# Create a directory app
+  argocd app create guestbook --repo https://github.com/NarendraJatti/kubernetes --path test --dest-namespace default --dest-server https://kubernetes.default.svc
+
+argocd app sync guestbook
+argocd app list
+
+argocd with helm
+=====================
+once helm chart is deployed in argo,will control evertything-no role of helm can not
+use helm ls and helm commands
+argocd app create helm-random-shapes \
+--repo https://3000-port-h4jux2lve4kgutjb.labs.kodekloud.com/bob/gitops-argocd.git \
+--path ./helm-chart \
+--helm-set color.circle=pink \
+--helm-set color.square=red \
+--helm-set service.type=NodePort \
+--dest-namespace default \
+--dest-server https://kubernetes.default.svc
+
+argocd app sync helm-random-shapes
+
+argocd app get helm-random-shapes
+argocd cluster list
+argocd cluster add cluster2
+When a new cluster is added into ArgoCD a service account called argocd-manager a cluster role called argocd-manager-role and a cluster role binding argocd-manager-role-binding is created.
+argocd-master-node Role is not created when a new cluster is added to ArgoCD.
+ArgoCD store the new cluster data in Secrets.
+kubectl -n argocd get secrets | grep -i cluster
+curl http://cluster2-controlplane:30335
+kubectl apply -f https://3000-port-h4jux2lve4kgutjb.labs.kodekloud.com/bob/gitops-argocd/src/branch/master/declarative/multi-app/app-of-apps.yml -n argocd
+
+curl -O https://3000-port-h4jux2lve4kgutjb.labs.kodekloud.com/bob/gitops-argocd/src/branch/master/declarative/multi-app/app-of-apps.yml
+
+custom health check argocd
+=========================
+kubectl get cm moving-shapes-colors -o yaml -n health-check
+kubectl patch configmap argocd-cm -n argocd --patch-file patch.yaml
+Create a yaml with following code, vi patch.yaml:
+Write a custom health-check script in ArgoCD to change the application health status if the TRAINGLE_COLOR is white in the configmap. The status should be as below.
+
+
+    Health Status = DEGRADED
+
+    Health Message = Use any color other than White
+  data:
+    resource.customizations.health.ConfigMap: |
+      hs = {}
+      hs.status = "Healthy"
+       if obj.data.TRIANGLE_COLOR == "white" then
+          hs.status = "Degraded"
+          hs.message = "Use any color other than White "
+       end
+      return hs
+Or
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+data:
+  resource.customizations.health.ConfigMap: |
+    hs = {}
+    hs.status = "Healthy"
+    if obj.data.TRIANGLE_COLOR == "white" then
+      hs.status = "Degraded"
+      hs.message = "Use any color other than White"
+    end
+    return hs
+kubectl apply -f patch.yaml
+
+Storing Data in a ConfigMap
+You can store any non-confidential data in a ConfigMap, such as:
+
+Application configuration settings (e.g., database URLs, feature flags).
+Environment-specific settings (e.g., environment variables).
+Small files, such as .env or config files, can also be stored as data in a ConfigMap.
+
+argocd app get health-check-app
+argocd app set --sync-policy=auto health-check-app
+kubectl get pod -n health-check
+argocd app set health-check-app --sync-policy=auto --self-heal
+
+argocd app set health-check-app  --sync-policy=auto --self-heal --auto-prune
