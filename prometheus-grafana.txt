@@ -1,0 +1,73 @@
+prometheus operator>>use service/pod monitoring
+
+services in argo
+==============
+argocd-repo-server
+argocd-metrics
+argocd-application-controller
+argocd-server-metrics
+
+service monitor is a CRD-service discovery based on matching labels
+
+alerts-manager
+==========
+argo apps status out of sync 
+annotation >>to define summary 
+alert manager configs
+prometheusrules crd 
+need to edit prometheusrules yaml and add argocd rule 
+
+
+
+Prometheus Reloader is a component designed to help automatically reload Prometheus configuration files when there are changes, without requiring manual intervention or Prometheus restart.
+Prometheus Reloader typically runs as a DaemonSet or Deployment within the same namespace where Prometheus is deployed.
+It watches Prometheus' ConfigMap or Secret and triggers a reload whenever changes are detected.
+
+
+In Kubernetes, PrometheusRule is a Custom Resource (CRD) used to define alerting rules and recording rules for Prometheus.
+
+
+If your Prometheus setup includes Prometheus Reloader, any change to the PrometheusRule CRD or the ConfigMap will trigger a reload of Prometheus (without needing a pod restart).
+This ensures that new or modified alerting/recording rules are picked up by Prometheus dynamically.
+
+he link or communication hook between Prometheus and node_exporter is essentially the Prometheus scrape job configuration. Prometheus queries the Kubernetes API for the list of available node_exporter pods and their associated endpoints and ports. It then scrapes metrics from the exposed /metrics endpoint of those pods.
+
+important
+==========
+When Prometheus scrapes the /metrics endpoint of node_exporter, it collects system-level metrics.
+
+
+kube-prometheus-stak>>helm rep>artifacthub
+
+Artifact Types Hosted on ArtifactHub:
+Helm Charts: Pre-packaged Kubernetes applications that can be easily installed and managed.
+Operators: Extensions to Kubernetes that manage applications and resources.
+Kubernetes Resources: Other YAML configurations and Kubernetes-related artifacts.
+CNAB Bundles: Cloud-native application bundles.
+
+
+adding argocd target to prometheus targets
+=========================================
+https://argo-cd.readthedocs.io/en/latest/operator-manual/metrics/#prometheus-operator
+use prometheus operator to add service monitor CRDs 
+
+The metadata.labels.release in the ServiceMonitor is a way to tell the Prometheus Operator which Prometheus instance should scrape the target service (e.g., node-exporter)
+Avoiding Multiple Prometheus Instances Scraping the Same Metrics:
+If you have multiple Prometheus instances running in your cluster, each instance could be monitoring different sets of services or namespaces.
+By setting the metadata.labels.release to a specific value, you ensure that only the Prometheus instance that has the matching release label will scrape the metrics for that ServiceMonitor.
+This avoids issues where multiple Prometheus instances might end up scraping the same metrics and causing potential duplication or mismanagement of resources.
+
+need to recover/get grafana password from secrets in k8 cluster 
+
+
+argocd app diff <APP_NAME>
+This will show you the differences between the current state of the application and the desired state defined in your repository.
+
+kubectl logs -n argocd -l app.kubernetes.io/name=argocd-server
+
+
+Common Reasons for Out-of-Sync Status:
+Manual Changes: If someone has manually changed the resources in the cluster (outside of Argo CD), the resources will be marked as out of sync.
+Failed Deployments: If a deployment or a sync failed (e.g., due to insufficient permissions, resource conflicts, or missing dependencies), the application might go out of sync.
+Helm Chart Values Changes: If the values used for a Helm chart were changed in Git, Argo CD will detect the discrepancy between the desired and actual state.
+Git Changes: If the Git repository has changed (e.g., someone pushed a new commit), the live resources might not reflect the latest state from Git, causing them to be out of sync.
