@@ -1,4 +1,4 @@
-# monitoring_argocd
+# monitoring_argocd-prometheus and grafana
 monitoring and observability with ARGOCD
 ![Screenshot 2025-01-23 205653](https://github.com/user-attachments/assets/c004957f-1da6-4ef8-829c-640e6395fb4e)
 
