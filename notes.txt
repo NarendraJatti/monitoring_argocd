@@ -138,3 +138,8 @@ kubectl get pod -n health-check
 argocd app set health-check-app --sync-policy=auto --self-heal
 
 argocd app set health-check-app  --sync-policy=auto --self-heal --auto-prune
+
+argocd with jenkins
+===================
+argocd app history
+argocd token stored in jenkins credentials

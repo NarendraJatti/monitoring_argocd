@@ -71,3 +71,11 @@ Manual Changes: If someone has manually changed the resources in the cluster (ou
 Failed Deployments: If a deployment or a sync failed (e.g., due to insufficient permissions, resource conflicts, or missing dependencies), the application might go out of sync.
 Helm Chart Values Changes: If the values used for a Helm chart were changed in Git, Argo CD will detect the discrepancy between the desired and actual state.
 Git Changes: If the Git repository has changed (e.g., someone pushed a new commit), the live resources might not reflect the latest state from Git, causing them to be out of sync.
+
+
+
+git pull origin master --allow-unrelated-histories
+
+By default, git pull is shorthand for running two commands:
+git fetch — which downloads the latest changes from the remote repository.
+git merge — which merges those changes into your current branch.
