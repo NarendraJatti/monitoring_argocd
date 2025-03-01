@@ -4,6 +4,71 @@ git repo-desired state
 k8 cluster-actual state
 git revert to do undo changes made 
 
+
+Argo CD Operator and Argo CD Controller are two important components in the Argo CD ecosystem, which is a GitOps tool used for deploying and managing applications in Kubernetes.
+
+1. Argo CD Operator
+The Argo CD Operator is a Kubernetes operator designed to manage the installation, configuration, and lifecycle of Argo CD instances. It automates many tasks that would otherwise require manual intervention, such as:
+
+Installing and upgrading Argo CD components.
+Managing Argo CD Custom Resources (like Applications, Projects, and Repositories).
+Ensuring that the Argo CD instance is in the desired state (e.g., maintaining high availability, scaling, handling failover).
+Key Responsibilities of Argo CD Operator:
+Lifecycle management: It installs, upgrades, and manages Argo CD instances and related resources.
+Configuration: It helps with the configuration of Argo CD components, making it easier to customize and manage multiple instances.
+Automated tasks: Automates repetitive tasks like creating users, setting up repositories, etc.
+
+Argo CD Controller
+The Argo CD Controller is a core component of the Argo CD architecture that performs the continuous reconciliation of the desired application state defined in Git with the actual state in the Kubernetes cluster. It ensures that the applications deployed in Kubernetes match the desired configurations (YAML manifests) stored in a Git repository.
+
+The controller works by:
+
+Watching Git repositories for changes in application manifests.
+Syncing changes to the Kubernetes cluster automatically, based on user-defined configurations and policies.
+Reconciliation: If the state of the application in the Kubernetes cluster differs from the desired state defined in the Git repository, the controller attempts to reconcile the difference.
+Key Responsibilities of Argo CD Controller:
+Syncing applications: Ensures that the deployed applications in the Kubernetes cluster match the desired state defined in Git repositories.
+Monitoring: Continuously monitors the cluster and Git for any drift between desired and actual application states.
+Self-healing: When the actual state diverges from the desired state (e.g., if someone manually modifies resources in the cluster), the controller can automatically revert those changes to maintain consistency with Git.
+Application management: It handles the lifecycle of applications (deployments, updates, rollbacks) in Kubernetes.
+
+How to Backup Argo CD:(manually)
+=================
+Backing up Kubernetes Resources (CRDs): You can use kubectl to back up Argo CD’s resources:
+kubectl get applications.argoproj.io -n <argo-cd-namespace> -o yaml > applications-backup.yaml
+kubectl get appprojects.argoproj.io -n <argo-cd-namespace> -o yaml > projects-backup.yaml
+kubectl get all -n <argo-cd-namespace> -o yaml > argocd-resources-backup.yaml
+
+Backup Automation:
+To automate the backup process, you could set up a Kubernetes CronJob that regularly exports these Kubernetes resources (CRDs, ConfigMaps, and Secrets) to a remote storage location like Amazon S3 or Google Cloud Storage.
+
+Restore Applications and Projects:
+kubectl apply -f applications-backup.yaml
+kubectl apply -f projects-backup.yaml
+
+resync applications>argocd app sync <app-name>
+
+In Argo CD, an "Out of Sync" status occurs when the actual state of your Kubernetes resources (in the cluster) differs from the desired state defined in the Git repository. Argo CD continuously monitors the applications it manages and flags differences in real-time. Here are some common real-time scenarios when Argo CD might show "Out of Sync":
+1. Manual Changes in Cluster
+2. New Changes Pushed to Git
+3. Image Tag Drift
+4. Failed Sync Attempts
+5. Configuration Drift
+Example: A Horizontal Pod Autoscaler increases the replica count for a deployment, causing it to differ from the static replica count defined in the Git repo.
+6.Resource Pruning Disabled
+Cause: Argo CD detects resources in the cluster that are not defined in the Git repository, but automatic pruning of these resources is disabled.
+Effect: These "extra" resources cause the app to be "Out of Sync" until manually pruned or managed.
+Example: A service that was removed from the Git repo still exists in the cluster.
+
+
+Pruning in Argo CD refers to the automatic deletion of Kubernetes resources that exist in the cluster but are no longer defined in the Git repository. When an application is synced with Argo CD, it checks the state of the cluster against the desired state defined in the Git repository. If resources in the cluster are found that should no longer exist (because they were removed from the Git repo), pruning is responsible for cleaning them up.
+
+Self-healing in Argo CD refers to the ability of Argo CD to automatically detect and correct any drift between the actual state of resources in the Kubernetes cluster and the desired state as defined in the Git repository. When self-healing is enabled, Argo CD will automatically sync the cluster to match the Git repository without needing manual intervention.
+It compares the actual state (current state in the cluster) with the desired state (defined in Git).
+If self-healing is enabled, Argo CD immediately triggers a sync to correct the drift and bring the application back to the desired state as defined in Git.
+The sync process can include reverting unauthorized changes, redeploying resources, or updating configurations.
+
+
 gitops principles
 ================
 1)declarative yaml apprach(discourge imperative comands)
@@ -141,5 +206,6 @@ argocd app set health-check-app  --sync-policy=auto --self-heal --auto-prune
 
 argocd with jenkins
 ===================
+https://learn.kodekloud.com/user/courses/gitops-with-argocd/module/2a9a275c-6019-4953-b2cf-96d9f4c303a8/lesson/98fe264a-5932-4d20-b0f1-eda2e025eb7f
 argocd app history
 argocd token stored in jenkins credentials

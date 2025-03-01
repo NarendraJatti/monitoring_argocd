@@ -1,0 +1,21 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: argo-cd-backup
+  namespace: <namespace>
+spec:
+  schedule: "0 2 * * *"  # Run daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: argo-cd-backup
+            image: bitnami/kubectl:latest
+            command: ["/bin/sh", "-c"]
+            args:
+            - |
+              kubectl get applications.argoproj.io -n <argo-cd-namespace> -o yaml > /backup/applications-backup.yaml
+              # (Add similar lines for other resources)
+              # Copy the backup to S3 or a remote location
+          restartPolicy: OnFailure
