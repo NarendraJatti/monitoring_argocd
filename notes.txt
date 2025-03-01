@@ -4,6 +4,16 @@ git repo-desired state
 k8 cluster-actual state
 git revert to do undo changes made 
 
+arogocd image updater
+=================
+Install ArgoCD Image Updater
+ pod named argocd-image-updater
+ If you are using a private Docker registry or need credentials for your registry, you need to add them as Kubernetes secrets. You can skip this step if you’re using public image registries (e.g., Docker Hub).
+ For AWS ECR, you can use IAM roles or create an ECR login token via aws ecr get-login-password and store it in a secret.
+
+git secret(created) will be also added in annotation of the argo app yaml file 
+ArgoCD Image Updater is a tool used to automatically update Kubernetes resources managed by ArgoCD when new container images are available. To use it with semantic versioning (SemVer), you can configure the argocd-image-updater annotation in your ArgoCD Application resource, specifying how it should track and update images based on their version tags.
+
 
 Argo CD Operator and Argo CD Controller are two important components in the Argo CD ecosystem, which is a GitOps tool used for deploying and managing applications in Kubernetes.
 

@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app
+  namespace: argocd
+  annotations:
+    # ArgoCD Image Updater annotation
+    # The image updater will look for versions with the "latest" semantic version (semver) strategy
+    argocd-image-updater.argoproj.io/image-list: my-app-container=<docker-registry>/my-app-container
+    # Strategy to update based on semantic versioning (e.g., 1.2.3)
+    argocd-image-updater.argoproj.io/my-app-container.update-strategy: semver
+    # Use a filter to specify how semantic versions should be tracked (e.g., versions >=1.2 and <2.0)
+    argocd-image-updater.argoproj.io/my-app-container.version: ^1.2.x
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/my-org/my-repo.git'
+    targetRevision: HEAD
+    path: k8s-manifests
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
